@@ -1,1 +1,1 @@
-# kubernetes-study
+# infra-study
