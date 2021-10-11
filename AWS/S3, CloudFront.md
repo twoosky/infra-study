@@ -66,7 +66,6 @@ Amazon S3와 CloudFront로 정적 파일 배포
        * `{CloudFront 도메인}/index3.html`로 확인
            * 캐싱된 awslogo.png를 엣지 로케이션으로부터 가져와 이미지를 띄움.
        * `크롬 개발자 도구 -> 네트워크`에서 index3.html 선택하고 `Response Headers`의 `X-Caches`값이 Hit from cloudfront이면 cloudfront으로부터 즉, 엣지 로케이션에서 컨텐츠를 불러 왔다는 의미
-  * 참조: https://musma.github.io/2019/06/29/publish-static-assets-over-https-using-cloudfront.html
   * 참조: https://aws.amazon.com/ko/blogs/korea/amazon-s3-amazon-cloudfront-a-match-made-in-the-cloud/
 * 질문
   * 그러니까 CloudFront를 사용하면 버킷의 컨텐츠들을 각 리전의 엣지 로케이션에 저장하고, CloudFront의 도메인 이름을 통해서 엣지 로케이션에 저장되어 있는 컨텐츠들을 꺼내올 수 있다는 건가?
@@ -79,28 +78,24 @@ EC2-LAMP-ELB
 * EC2: AWS 대표 컴퓨팅 서비스
 * VPC: 가상 사설 네트워크를 구축
 * Elastic Load Balancing(ELB): 네트워크 트래픽 분산
+  * 둘 이상의 가용 영역에서 EC2 인스턴스 같은 여러 대상에 수신 애플리케이션 `트래픽을 분산`
+  * 리스너
+    * 구성한 프로토콜 및 포트를 사용하여 클라이언트의 연결 요청을 확인함.
+    * 리스너에 대해 정의한 규칙에 따라 로드 밸런서가 등록된 대상으로 요청을 라우팅하는 방법 결정
+    * 로드 밸런서에 하나 이상의 리스너 추가 가능
+  * 대상 그룹
+    * 지정한 프로토콜과 포트 번호를 사용하여 EC2 인스턴스 같은 하나 이상의 등록된 대상으로 요청을 라우팅
+  * 인터넷에선 EC2로 바로 접근해서 웹 페이지를 보는 것이 아니라 ALB의 dns name을 브라우저에 입력해서 생성한 EC2의 웹 화면을 봄.
+  * ALB에 2개의 EC2를 등록해서 트래픽(요청) 분산
+  * 참조: https://docs.aws.amazon.com/ko_kr/elasticloadbalancing/latest/application/introduction.html
 * 아키텍처 다이어그램
   * internet Gateway을 통해 외부와 통신 즉, internet Gateway를 통해 트래픽이 인터넷으로 나가거나 AWS로 들어옴
   * 여러 개의 서버 EC2를 네트워크 트래픽 분산기인 ELB에 연결
   * 외부의 트래픽이 internet Gateway를 통해 들어옴
   * internet Gateway에서 ELB로 전달
   * ELB에 등록된 두 개의 EC2로 트래픽이 분산되어 전달
-* 아키텍처 구현 순서
-  * Amazon Linux 2(EC2)에 LAMP 웹 서버 설치하기
-    * LAMP 서버 설치 및 테스트
-       * EC2 생성 시 User Data 스크립트 추가하여 자동으로 설치
-       * LAMP 서버 테스트
-    * Custom AMI 생성
-    * Custom AMI로 두 번째 LAMP 서버 생성
-    * 데이터베이스 보안 설정
-  * Application Load Balancer 시작하기(ELB-ALB)
-    * Load Balancer 유형 선택
-    * Load Bancer 및 리스너 구성
-    * Lad Balancer에 대한 보안 그룹 구성
-    * 대상 그룹 구성
-    * 대상 그룹에 대상 등록
-    * Load Balancer 생성 및 테스트
-    * Load Balancer 삭제 선택 사항
+  
+ <img src="https://user-images.githubusercontent.com/50009240/136827470-931b47e6-00bb-4c79-8a18-c477909965ca.png" width="450px" height="300px" title="EC2-LAMP-ELB" alt="EC2-LAMP-ELB"></img><br/>
 * EC2 생성 및 LAMP 웹 서버 설치
   * 인스턴스 시작(Launch instance) 선택
   * Amazon Linux 2의 HVM 버전 선택
@@ -111,8 +106,29 @@ EC2-LAMP-ELB
   * Add Tags에서 EC2의 용도 정의
   * Security Group에서 인스턴스에 대한 트래픽을 제어하는 방화벽 설정
   * 키 페어 선택/생성
-
-     
+* ssh로 EC2 연결 방법
+  ```ssh
+   $ sudo ssh -i /path/my-key-pair.pem my-instance-user-name@my-instance-public-dns-name
+  ```
+  ```ssh
+   $ sudo ssh -i seoul-lab-web.pem ec2-user@ec2-3-36-26-193.ap-northeast-2.compute.amazonaws.com
+  ```
+  * my-instance-user-name은 AMI에 따라 다름
+  * .pem 키 페어 파일 필요
+  * EC2 연결 후 Public IPv4 address로 접속 시 아마존 웹페이지 뜨면 정상 연결된 상태
+  * 참조: https://docs.aws.amazon.com/ko_kr/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html
+* Custom AMI
+  * 인스턴스 선택 후 이미지 생성
+  * 생성한 Custom AMI로 인스턴스 생성
+  * 키 페어 선택
+* ELB-Application Load Balancing
+  * Load Balancer 유형 선택
+  * Load Bancer 및 리스너 구성
+  * Lad Balancer에 대한 보안 그룹 구성
+  * 대상 그룹 구성
+  * 대상 그룹에 대상 등록
+  * Load Balancer 생성 및 테스트
+  * Load Balancer 삭제 (선택 사항)
      
      
      
