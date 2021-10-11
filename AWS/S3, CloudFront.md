@@ -64,16 +64,54 @@ Amazon S3와 CloudFront로 정적 파일 배포
            * `<img src="https://{CloudFront 도메인}/awslogo.png" alt="AWS LOGO"/>`
        * Bucket에 index3.html 업로드
        * `{CloudFront 도메인}/index3.html`로 확인
-       * * 캐싱된 awslogo.png를 엣지 로케이션으로부터 가져와 이미지를 띄움.
+           * 캐싱된 awslogo.png를 엣지 로케이션으로부터 가져와 이미지를 띄움.
        * `크롬 개발자 도구 -> 네트워크`에서 index3.html 선택하고 `Response Headers`의 `X-Caches`값이 Hit from cloudfront이면 cloudfront으로부터 즉, 엣지 로케이션에서 컨텐츠를 불러 왔다는 의미
   * 참조: https://musma.github.io/2019/06/29/publish-static-assets-over-https-using-cloudfront.html
   * 참조: https://aws.amazon.com/ko/blogs/korea/amazon-s3-amazon-cloudfront-a-match-made-in-the-cloud/
 * 질문
   * 그러니까 CloudFront를 사용하면 버킷의 컨텐츠들을 각 리전의 엣지 로케이션에 저장하고, CloudFront의 도메인 이름을 통해서 엣지 로케이션에 저장되어 있는 컨텐츠들을 꺼내올 수 있다는 건가?
   * 엣지 로케이션이 캐시 역할인건가?
-  * 그럼 그냥 버킷의 컨텐츠에 접근하는 것보다 CloudFront를 통해서 엣지 로케이션에 있는 컨텐츠에 접근하는 것이 더 빠르다는건가?
-     
-     
+  * 그럼 그냥 버킷의 컨텐츠에 접근하는 것보다 CloudFront를 통해서 엣지 로케이션에 있는 컨텐츠에 접근하는 것이 더 빠르다는건가?  
+  
+  
+EC2-LAMP-ELB
+===
+* EC2: AWS 대표 컴퓨팅 서비스
+* VPC: 가상 사설 네트워크를 구축
+* Elastic Load Balancing(ELB): 네트워크 트래픽 분산
+* 아키텍처 다이어그램
+  * internet Gateway을 통해 외부와 통신 즉, internet Gateway를 통해 트래픽이 인터넷으로 나가거나 AWS로 들어옴
+  * 여러 개의 서버 EC2를 네트워크 트래픽 분산기인 ELB에 연결
+  * 외부의 트래픽이 internet Gateway를 통해 들어옴
+  * internet Gateway에서 ELB로 전달
+  * ELB에 등록된 두 개의 EC2로 트래픽이 분산되어 전달
+* 아키텍처 구현 순서
+  * Amazon Linux 2(EC2)에 LAMP 웹 서버 설치하기
+    * LAMP 서버 설치 및 테스트
+       * EC2 생성 시 User Data 스크립트 추가하여 자동으로 설치
+       * LAMP 서버 테스트
+    * Custom AMI 생성
+    * Custom AMI로 두 번째 LAMP 서버 생성
+    * 데이터베이스 보안 설정
+  * Application Load Balancer 시작하기(ELB-ALB)
+    * Load Balancer 유형 선택
+    * Load Bancer 및 리스너 구성
+    * Lad Balancer에 대한 보안 그룹 구성
+    * 대상 그룹 구성
+    * 대상 그룹에 대상 등록
+    * Load Balancer 생성 및 테스트
+    * Load Balancer 삭제 선택 사항
+* EC2 생성 및 LAMP 웹 서버 설치
+  * 인스턴스 시작(Launch instance) 선택
+  * Amazon Linux 2의 HVM 버전 선택
+  * `t2 micro` 인스턴스 유형 선택
+  * 인스턴스 세부 정보 구성
+    * Advanced Details에서 User data에 `#include https://bit.ly/Userdata` 입력
+  * Add Storage에서 EC2가 사용할 용량 설정
+  * Add Tags에서 EC2의 용도 정의
+  * Security Group에서 인스턴스에 대한 트래픽을 제어하는 방화벽 설정
+  * 키 페어 선택/생성
+
      
      
      
