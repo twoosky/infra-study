@@ -9,3 +9,8 @@ VPC와 중계서버(Bastion)
   * EC2가 외부 api와 통신하는 경우 즉, 트래픽이 외부로 나가야 하는 경우 라우팅 테이블에 NAT Gateway를 업데이트하여 외부와 통신한다.
   * EC2에 접근하기 위해선 중계서버 `Bastion`을 사용힌다.
     * 외부에서 접근 가능한 public subnet에 서버를 생성하여 user 또는 개발자가 해당 서버를 통해서 private subnet에 있는 EC2에 접근할 수 있도록 하는 중계서버를 `Bastion`이라고 한다.
+
+# VPC 생성
+# Subnet 생성
+# Route table
+# NAT Gateway
