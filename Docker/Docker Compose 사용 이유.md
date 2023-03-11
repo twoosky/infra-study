@@ -117,3 +117,8 @@ services:
     ports:
       - "5000:8080"
 ```
+* `version`: 도커 컴포즈의 버전
+* `services`: 실행하려는 컨테이너들 정의
+* `image`: 사용할 이미지 이름
+* `build`: 해당 경로에 있는 Dockerfile을 사용하여 빌드
+* `ports`: 로컬포트와 컨테이너포트 매핑
